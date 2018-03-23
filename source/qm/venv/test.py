@@ -1,27 +1,13 @@
 import math
 
 def combine(a, b):
-    term = []
-
     if a == b or diffcount(a, b) != 1:
         return None
-
-    for i in range(len(a)):
-        if a[i] == b[i]:
-            term.append(a[i])
-        elif a[i]=="X" or b[i]=="X":
-            term.append("X")
-        else:
-            term.append("X")
-    return ''.join(term)
+    return ''.join([a[i] if a[i] == b[i] else "X" for i in range(len(a))])
 
 def diffcount(a, b):
-    count = 0
-    for i in range(len(a)):
-        if a[i] != b[i]:
-            if not (a[i]=="X" or b[i]=="X"):
-                count += 1
-    return count
+    check = lambda a, b: a != b and not (a == "X" or b == "X")
+    return len([i for i in range(len(a)) if check(a[i], b[i])])
 
 def minterms(n=0):
     """
