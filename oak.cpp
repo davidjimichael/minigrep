@@ -117,10 +117,9 @@ class Tree {
 		while (curr) {
 			if (c) {
 				f(curr);
-
 			}
 		}
-		return NULL;
+		return curr;
 	}
 
 	T Get(T i, nptr r) {
@@ -132,7 +131,7 @@ class Tree {
 				r = i < r->info ? r->left : r->right;
 			}
 		}
-		return NULL;
+		return r;
 	}
 
 	template<typename F>
