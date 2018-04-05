@@ -6,10 +6,18 @@
 using str = std::string;
 
 str Input(str text, bool optional = false) {
-	str output = optional? text + " (optional, enter to skip)" : text;
-	std::cout << output << std::endl;
+	str output = !optional ? text : text + " (optional, enter to skip)";
+	std::cout <<  output << std::endl;
 	std::getline(std::cin, text);
 	return text;
+}
+
+bool isNum(str numstr) {
+    return numstr.find_first_not_of("0123456789") == str::npos;
+}
+        
+int parse(str numstr) {
+    return isNum(numstr) ? std::stoi(numstr) : 0;
 }
 
 class Movie {
@@ -20,46 +28,46 @@ public:
 	Movie(str t = "", str u = "", int y = 0, int r = 0, int rt = 0) :
 		year(y), rating(r), runtime(rt), title(t), url(u) {}
 
-	Movie(const Movie& r) {
+	Movie(const Movie &r)
+	{
 		url = r.url;
 		year = r.year;
 		title = r.title;
 		rating = r.rating;
 		runtime = r.runtime;
 	}
-
-	bool operator < (const Movie& r) const {
+	
+	void Title(str t) { title = t; }
+    void Year(int y) { year = y; }
+    void Rating(int r) { rating = r; } 
+    void Runtime(int r) { runtime = r; }
+    void Url(str u) { url = u; }
+    
+	bool operator < (const Movie &r) const {
 		return (title != r.title) ? title < r.title : year < r.year;
 	}
 
-	bool operator > (const Movie& r) const {
+	bool operator > (const Movie &r) const {
 		return (title != r.title) ? title > r.title : year > r.year;
 	}
 
 	void FromInput() {
-		str s = "";
-
-		title = Input("Title");
-		s = Input("Year");
-
-		if (s.Get_first_not_of("1234567890") == str::npos) {
-			year = stoi(s);
-		}
-
-		s = Input("Runtime", true);
-		runtime = s.length() ? std::stoi(s) : 0;
-		s = Input("Rating", true);
-		rating = s.length() ? std::stoi(s) : 0;
-		url = Input("Url", true);
+        while (title == "" && year == 0) {
+            title = Input("Title");
+		    year  = parse(Input("Year"));
+        }
+		runtime = parse(Input("Runtime", true));
+		rating  = parse(Input("Rating", true));
+		url     = Input("Url", true);
 	}
 
-	friend std::ostream& operator << (std::ostream& out, const Movie& m) {
-		out << m.title << "\n";
-		out << m.year << "\n";
-		out << m.runtime << "\n";
-		out << m.rating << "\n";
-		out << m.url << "\n";
-		return out;
+	friend std::ostream& operator << (std::ostream &out, const Movie &m) {
+		return out 
+		    << m.title   << "\n"
+		    << m.year    << "\n"
+		    << m.runtime << "\n"
+		    << m.rating  << "\n"
+		    << m.url     << "\n";
 	}
 };
 
@@ -72,30 +80,19 @@ class Tree {
 		T info;
 		nptr left, right;
 
-		Node(T i) : info{ i }, left(nullptr), r(nullptr) {}
+		Node(T i = NULL, nptr l = nullptr, nptr r = nullptr) :
+			info(i), left(l), right(r) {}
 	};
 
 	nptr root;
-
-	template<typename F> T Search(F funct, T t, nptr n) {
-		while (n) {
-			if (t != n->info) {
-				n = t < n->info ? n->left : n->right;
-			} 
-			else {
-				funct(n->info);
-			}
-		}
-		return n;
-	}
-
+	
 	void Insert(T i, nptr r) {
 		if (r) {
 			if (i < r->info) {
 				if (!r->left) {
-					nptr temp{ new Node(i) };
+					nptr temp { new Node(i) };
 					r->left = temp;
-				}
+				} 
 				else {
 					Insert(i, r->left);
 				}
@@ -112,26 +109,19 @@ class Tree {
 		}
 	}
 
-	template<typename Funct, typename Cond>
-	T Fuck(Funct f, Cond c, T info, nptr curr) {
-		while (curr) {
-			if (c) {
-				f(curr);
-			}
-		}
-		return curr;
-	}
-
-	T Get(T i, nptr r) {
+	T Find(T i, nptr r) {
 		while (r) {
-			if (i == r->info) {
-				return r->info;
-			} 
+			if (i < r->info) {
+				r = r->left;
+			}
+			else if (i > r->info) {
+				r = r->right;
+			}
 			else {
-				r = i < r->info ? r->left : r->right;
+				return r->info;
 			}
 		}
-		return r;
+		return *new T();
 	}
 
 	template<typename F>
@@ -141,7 +131,7 @@ class Tree {
 		f(r->info);
 		InOrder(f, r->right);
 	}
-
+	
 	template<typename F>
 	void PreOrder(F f, nptr r) {
 		if (!r) return;
@@ -162,12 +152,12 @@ class Tree {
 		}
 		else {
 			if (!r->left) {
-				auto temp = r;
+				nptr temp = r;
 				r = r->right;
 				return temp;
 			}
 			else if (!r->right) {
-				auto temp = r;
+				nptr temp = r;
 				r = r->left;
 				return temp;
 			}
@@ -187,7 +177,7 @@ class Tree {
 
 public:
 	Tree() : root{ nullptr } {}
-
+	
 	T Delete(T i) {
 		return Delete(i, root)->info;
 	}
@@ -196,27 +186,25 @@ public:
 		if (root) {
 			return Insert(i, root);
 		}
-		else {
-			this->root = nptr{ new Node(i) };
-		}
+		this->root = nptr{ new Node(i) };
 	}
 
-	T Get(T i) {
-		return Get(i, root);
+	T Find(T i) {
+		return Find(i, root);
 	}
 
 	bool Contains(T i) {
-		return Get(i, root) ? true : false;
+		return Find(i, root) ? true : false;
 	}
-
+	
 	void Display() {
-		InOrder([&](auto info) {
+		InOrder([&](auto info){ 
 			std::cout << info << std::endl;
 		}, root);
 	}
 
 	void SaveTo(std::string filename) {
-		std::fstream file;
+		std::ofstream file;
 		file.open(filename);
 
 		if (file.is_open()) {
@@ -230,29 +218,45 @@ public:
 
 using namespace std; // lots of couts in the next stage 
 
-void ReadFrom(str filename, Tree<Movie>& tree) {
-	// TODO read method
+void ReadFrom(str filename, Tree<Movie> &tree) {
+	std::ifstream file;
+	file.open(filename);
+    Movie m;
+    str s = "";
+    
+	if (file.is_open()) {
+	    while (file >> s) {
+            m.Title(s);
+            getline(file, s); 
+            m.Year(parse(s));
+            file >> s;
+            m.Runtime(parse(s));
+            file >> s;
+            m.Rating(parse(s));
+            file >> s;
+            m.Url(s);
+            tree.Insert(m);
+        }
+		file.close();
+	}
 }
 
-void Save(Tree<Movie>& tree) {
-	cout << "Save to filename:\n";
-	str filename;
-	cin >> filename;
-	tree.SaveTo(filename);
+void Save(Tree<Movie> &tree) {
+	tree.SaveTo(Input("Save to filename"));
 }
 
 void Help() {
-	cout << "Insert(i), Delete(d), List(l), Quit(q), Get(f)\n";
+	cout << "Insert(i), Delete(d), List(l), Quit(q), Find(f)\n";
 }
 
-void Insert(Tree<Movie>& tree) {
+void Insert(Tree<Movie> &tree) {
 	Movie m;
 	m.FromInput();
 	tree.Insert(m);
 	return;
 }
 
-void Delete(Tree<Movie>& tree) {
+void Delete(Tree<Movie> &tree) {
 	Movie m;
 	m.FromInput();
 	tree.Delete(m);
@@ -262,10 +266,10 @@ void List(Tree<Movie>& tree) {
 	tree.Display();
 }
 
-void Get(Tree<Movie>& tree) {
+void Find(Tree<Movie> &tree) {
 	Movie m;
 	m.FromInput();
-	m = tree.Get(m);
+	m = tree.Find(m);
 	cout << m;
 }
 
@@ -276,6 +280,8 @@ int main() {
 	Tree<Movie> *tree = new Tree<Movie>();
 	string input = "";
 	char cmd = ' ';
+
+	ReadFrom(Input("Load file"), *tree);
 
 	while (cmd != 'q') {
 		input = Input("Command");
@@ -295,7 +301,7 @@ int main() {
 			Delete(*tree);
 			break;
 		case 'f':
-			Get(*tree);
+			Find(*tree);
 			break;
 		case 'q':
 			Save(*tree);
