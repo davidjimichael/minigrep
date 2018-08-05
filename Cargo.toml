@@ -1,0 +1,6 @@
+[package]
+name = "morse-rs"
+version = "0.1.0"
+authors = ["David Michael <davidjimichael@gmail.com>"]
+
+[dependencies]

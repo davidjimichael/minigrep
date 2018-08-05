@@ -1,0 +1,4 @@
+[[package]]
+name = "morse-rs"
+version = "0.1.0"
+
