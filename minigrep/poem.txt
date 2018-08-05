@@ -1,0 +1,7 @@
+test strings only in this file
+but dis line two.
+
+rust: trust me.
+hahaha
+iiiiiiiii
+Rust: Trust Me.
